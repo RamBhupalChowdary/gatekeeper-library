@@ -3,6 +3,7 @@ kind: ConstraintTemplate
 metadata:
   name: k8spspallowprivilegeescalationcontainer
   annotations:
+    metadata.gatekeeper.sh/title: "Allow Privilege Escalation in Container"
     description: >-
       Controls restricting escalation to root privileges. Corresponds to the
       `allowPrivilegeEscalation` field in a PodSecurityPolicy. For more
@@ -57,6 +58,9 @@ spec:
         }
         input_containers[c] {
             c := input.review.object.spec.initContainers[_]
+        }
+        input_containers[c] {
+            c := input.review.object.spec.ephemeralContainers[_]
         }
         # has_field returns whether an object has a field
         has_field(object, field) = true {

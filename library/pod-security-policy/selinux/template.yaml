@@ -3,6 +3,7 @@ kind: ConstraintTemplate
 metadata:
   name: k8spspselinuxv2
   annotations:
+    metadata.gatekeeper.sh/title: "SELinux V2"
     description: >-
       Defines an allow-list of seLinuxOptions configurations for pod
       containers. Corresponds to a PodSecurityPolicy requiring SELinux configs.
@@ -95,6 +96,10 @@ spec:
         }
         input_security_context[c] {
             c := input.review.object.spec.initContainers[_]
+            has_field(c.securityContext, "seLinuxOptions")
+        }
+        input_security_context[c] {
+            c := input.review.object.spec.ephemeralContainers[_]
             has_field(c.securityContext, "seLinuxOptions")
         }
 

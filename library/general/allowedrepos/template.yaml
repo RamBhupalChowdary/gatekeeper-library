@@ -3,6 +3,7 @@ kind: ConstraintTemplate
 metadata:
   name: k8sallowedrepos
   annotations:
+    metadata.gatekeeper.sh/title: "Allowed Repositories"
     description: >-
       Requires container images to begin with a string from the specified list.
 spec:
@@ -37,4 +38,11 @@ spec:
           satisfied := [good | repo = input.parameters.repos[_] ; good = startswith(container.image, repo)]
           not any(satisfied)
           msg := sprintf("initContainer <%v> has an invalid image repo <%v>, allowed repos are %v", [container.name, container.image, input.parameters.repos])
+        }
+
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.ephemeralContainers[_]
+          satisfied := [good | repo = input.parameters.repos[_] ; good = startswith(container.image, repo)]
+          not any(satisfied)
+          msg := sprintf("ephemeralContainer <%v> has an invalid image repo <%v>, allowed repos are %v", [container.name, container.image, input.parameters.repos])
         }

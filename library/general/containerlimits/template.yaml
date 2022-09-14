@@ -3,6 +3,7 @@ kind: ConstraintTemplate
 metadata:
   name: k8scontainerlimits
   annotations:
+    metadata.gatekeeper.sh/title: "Container Limits"
     description: >-
       Requires containers to have memory and CPU limits set and constrains
       limits to be within the specified maximum values.
@@ -171,6 +172,8 @@ spec:
         violation[{"msg": msg}] {
           general_violation[{"msg": msg, "field": "initContainers"}]
         }
+
+        # Ephemeral containers not checked as it is not possible to set field.
 
         general_violation[{"msg": msg, "field": field}] {
           container := input.review.object.spec[field][_]

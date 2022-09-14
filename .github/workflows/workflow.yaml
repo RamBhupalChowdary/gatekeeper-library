@@ -1,18 +1,24 @@
 name: CI
 on:
   push:
+    paths-ignore:
+      - ".github/workflows/website.yaml"
+      - "website/**"
     branches: [master]
   pull_request:
+    paths-ignore:
+      - ".github/workflows/website.yaml"
+      - "website/**"
     branches: [master]
 jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Generate templates
+      - name: Generate templates and docs
         run: |
-          make generate
-          git diff --exit-code || (echo "Please run 'make generate' to generate the templates" && exit 1)
+          make generate generate-website-docs
+          git diff --exit-code || (echo "Please run 'make generate generate-website-docs' to generate the templates and docs" && exit 1)
 
   build:
     needs: generate
@@ -20,7 +26,7 @@ jobs:
     strategy:
       matrix:
         os: [ "ubuntu-latest", "macos-latest" ]
-        opa: [ "v0.33.1" ]
+        opa: [ "v0.42.2" ]
     name: Unit test on ${{ matrix.os }} opa ${{ matrix.opa }}
     steps:
       - uses: actions/checkout@v2
@@ -35,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        gatekeeper: [ "release-3.6", "release-3.7" ]
+        gatekeeper: [ "release-3.8", "release-3.9" ]
     name: "Integration test on Gatekeeper ${{ matrix.gatekeeper }}"
     steps:
       - name: Check out code into the Go module directory
@@ -78,4 +84,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          make test-gator-dockerized
+          make verify-gator-dockerized

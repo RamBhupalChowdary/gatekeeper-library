@@ -46,7 +46,7 @@ The `suite.yaml` files define test cases for each ConstraintTemplate in the libr
 Changes to gatekeeper-library ConstraintTemplates may be tested with the gator CLI:
 
 ```
-gatekeeper-library$ gator test ./...
+gatekeeper-library$ gator verify ./...
 ```
 
 The gator CLI may be downloaded from the Gatekeeper
@@ -67,6 +67,7 @@ Each new policy should contain:
 
 * policy code and tests are maintained in `src/<policy-name>/src.rego` and `src/<policy-name>/src_test.rego`
 * `make generate` will generate `library/<policy-name>/template.yaml` from `src/<policy-name>/src.rego` using [gomplate](https://docs.gomplate.ca/).
+* `make generate-website-docs` will generate the markdown files required for the website.
 * run all tests with `./test.sh`
 * run single test with `opa test src/<folder>/src.rego src/<folder>/src_test.rego --verbose`
 * print results with `trace(sprintf("%v", [thing]))`

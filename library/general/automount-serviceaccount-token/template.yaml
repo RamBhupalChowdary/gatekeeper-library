@@ -3,6 +3,7 @@ kind: ConstraintTemplate
 metadata:
   name: k8spspautomountserviceaccounttokenpod
   annotations:
+    metadata.gatekeeper.sh/title: "Automount Service Account Token for Pod"
     description: >-
       Controls the ability of any Pod to enable automountServiceAccountToken.
 spec:
@@ -44,6 +45,8 @@ spec:
         input_containers[c] {
             c := input.review.object.spec.initContainers[_]
         }
+
+        # Ephemeral containers not checked as it is not possible to set field.
 
         has_key(x, k) {
             _ = x[k]

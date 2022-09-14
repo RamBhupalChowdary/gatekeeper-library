@@ -3,6 +3,7 @@ kind: ConstraintTemplate
 metadata:
   name: k8spspseccomp
   annotations:
+    metadata.gatekeeper.sh/title: "Seccomp"
     description: >-
       Controls the seccomp profile used by containers. Corresponds to the
       `seccomp.security.alpha.kubernetes.io/allowedProfileNames` annotation on
@@ -251,6 +252,10 @@ spec:
 
         input_containers[container.name] = container {
             container := input.review.object.spec.initContainers[_]
+        }
+
+        input_containers[container.name] = container {
+            container := input.review.object.spec.ephemeralContainers[_]
         }
       libs:
         - |

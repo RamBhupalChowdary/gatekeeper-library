@@ -1,11 +1,15 @@
-KIND_VERSION ?= 0.11.1
+docker := docker #You can build with podman by doing: make docker=podman
+KIND_VERSION ?= 0.14.0
 # note: k8s version pinned since KIND image availability lags k8s releases
-KUBERNETES_VERSION ?= 1.21.2
-KUSTOMIZE_VERSION ?= 3.7.0
-GATEKEEPER_VERSION ?= release-3.5
+KUBERNETES_VERSION ?= 1.24.0
+KUSTOMIZE_VERSION ?= 4.5.5
+GATEKEEPER_VERSION ?= release-3.8
 BATS_VERSION ?= 1.3.0
-GATOR_VERSION ?= 3.7.1
+GATOR_VERSION ?= 3.9.0
 GOMPLATE_VERSION ?= 3.10.0
+
+REPO_ROOT := $(shell git rev-parse --show-toplevel)
+WEBSITE_SCRIPT_DIR := $(REPO_ROOT)/scripts/website
 
 integration-bootstrap:
 	# Download and install kind
@@ -19,9 +23,9 @@ integration-bootstrap:
 	# Download and install yq
 	sudo snap install yq
 	# Check for existing kind cluster
-	if [ $$(kind get clusters) ]; then kind delete cluster; fi
+	if [ $$(${GITHUB_WORKSPACE}/bin/kind get clusters) ]; then ${GITHUB_WORKSPACE}/bin/kind delete cluster; fi
 	# Create a new kind cluster
-	TERM=dumb kind create cluster --image kindest/node:v${KUBERNETES_VERSION} --config=test/kind_config.yaml
+	TERM=dumb ${GITHUB_WORKSPACE}/bin/kind create cluster --image kindest/node:v${KUBERNETES_VERSION} --wait 5m --config=test/kind_config.yaml
 
 deploy:
 	kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/${GATEKEEPER_VERSION}/deploy/gatekeeper.yaml
@@ -32,26 +36,30 @@ uninstall:
 test-integration:
 	bats -t test/bats/test.bats
 
-.PHONY: test-gator
-test-gator:
-	gator test ./...
+.PHONY: verify-gator
+verify-gator:
+	gator verify ./...
 
-.PHONY: test-gator-dockerized
-test-gator-dockerized: __build-gator
-	docker run -i -v $(shell pwd):/gatekeeper-library gator-container test ./...
+.PHONY: verify-gator-dockerized
+verify-gator-dockerized: __build-gator
+	$(docker) run -i -v $(shell pwd):/gatekeeper-library gator-container verify ./...
 
 .PHONY: build-gator
 __build-gator:
-	docker build --build-arg GATOR_VERSION=$(GATOR_VERSION) -f build/gator/Dockerfile -t gator-container .
+	$(docker) build --build-arg GATOR_VERSION=$(GATOR_VERSION) -f build/gator/Dockerfile -t gator-container .
 
 .PHONY: generate
 generate: __build-gomplate
-	docker run -v $(shell pwd):/gatekeeper-library gomplate-container ./scripts/generate.sh
+	$(docker) run -v $(shell pwd):/gatekeeper-library gomplate-container ./scripts/generate.sh
 
 .PHONY: __build-gomplate
 __build-gomplate:
-	docker build --build-arg GOMPLATE_VERSION=$(GOMPLATE_VERSION) -f build/gomplate/Dockerfile -t gomplate-container .
+	$(docker) build --build-arg GOMPLATE_VERSION=$(GOMPLATE_VERSION) -f build/gomplate/Dockerfile -t gomplate-container .
 
 .PHONY: require-suites
 require-suites:
 	./scripts/require-suites.sh
+
+.PHONY: generate-website-docs
+generate-website-docs:
+	cd $(WEBSITE_SCRIPT_DIR); go run generate.go

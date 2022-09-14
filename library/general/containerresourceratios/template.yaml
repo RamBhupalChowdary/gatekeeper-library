@@ -3,6 +3,7 @@ kind: ConstraintTemplate
 metadata:
   name: k8scontainerratios
   annotations:
+    metadata.gatekeeper.sh/title: "Container Ratios"
     description: >-
       Sets a maximum ratio for container resource limits to requests.
 
@@ -181,6 +182,8 @@ spec:
         violation[{"msg": msg}] {
           general_violation[{"msg": msg, "field": "initContainers"}]
         }
+
+        # Ephemeral containers not checked as it is not possible to set field.
 
         general_violation[{"msg": msg, "field": field}] {
           container := input.review.object.spec[field][_]
